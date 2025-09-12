@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dadi Narendar - Full Stack Developer</title>
+    <title>Dadi Narendar - 3D Full Stack Developer Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,6 +15,7 @@
       type="text/javascript"
       src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
     ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
       /* CSS Variables for Theming */
       :root {
@@ -49,12 +50,22 @@
         scroll-behavior: smooth;
         transition: background-color 0.3s ease, color 0.3s ease;
         cursor: none; /* Hide default cursor */
+        overflow-x: hidden;
+      }
+      
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
       }
 
       /* Custom Animated Cursor */
       .cursor-dot {
-        width: 8px;
-        height: 8px;
+        width: 12px;
+        height: 12px;
         background-color: var(--accent-primary);
         position: fixed;
         top: 50%;
@@ -81,8 +92,8 @@
       @keyframes drop-fade {
         from {
           opacity: 0.7;
-          width: 10px;
-          height: 10px;
+          width: 20px;
+          height: 20px;
         }
         to {
           opacity: 0;
@@ -162,7 +173,8 @@
 
       /* Card styles */
       .custom-card {
-        background-color: var(--bg-secondary);
+        background-color: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
+        backdrop-filter: blur(5px);
         border: 1px solid var(--border-color);
         transition: all 0.3s ease;
       }
@@ -181,14 +193,11 @@
 
       /* Header styles */
       header {
-        background: rgba(18, 18, 18, 0.8);
+        background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
         backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--border-color);
       }
-      .light-theme header {
-        background: rgba(255, 255, 255, 0.8);
-      }
-
+      
       /* Form input styles */
       input,
       textarea {
@@ -280,6 +289,7 @@
     </style>
   </head>
   <body class="antialiased">
+    <canvas id="bg-canvas"></canvas>
     <div class="cursor-dot"></div>
 
     <div
@@ -404,7 +414,7 @@
       </nav>
       <div
         id="mobile-menu"
-        class="hidden md:hidden bg-[var(--bg-secondary)] px-6 pt-2 pb-4 space-y-2"
+        class="hidden md:hidden bg-opacity-80 backdrop-blur-sm px-6 pt-2 pb-4 space-y-2"
       >
         <a
           href="#home"
@@ -434,7 +444,7 @@
       </div>
     </header>
 
-    <main class="container mx-auto px-6">
+    <main class="container mx-auto px-6 relative z-10">
       <section id="home" class="min-h-screen flex items-center py-20">
         <div class="grid md:grid-cols-2 gap-16 items-center">
           <div
@@ -797,134 +807,202 @@
       </section>
     </main>
 
-    <footer class="text-center py-8 border-t border-[var(--border-color)]">
+    <footer class="text-center py-8 border-t border-[var(--border-color)] relative z-10">
       <p class="text-sm">
         &copy; 2024 Dadi Narendar. Designed with inspiration.
       </p>
     </footer>
 
     <script>
-      // --- Custom Cursor ---
-      const cursorDot = document.querySelector(".cursor-dot");
-      const body = document.querySelector("body");
-      const dropPool = [];
-      const poolSize = 30;
-      let poolIndex = 0;
-
-      // Create a pool of drop elements
-      for (let i = 0; i < poolSize; i++) {
-        const drop = document.createElement("div");
-        drop.classList.add("drop");
-        body.appendChild(drop);
-        dropPool.push(drop);
-      }
-
-      window.addEventListener("mousemove", function (e) {
-        const posX = e.clientX;
-        const posY = e.clientY;
-
-        cursorDot.style.left = `${posX}px`;
-        cursorDot.style.top = `${posY}px`;
-
-        const drop = dropPool[poolIndex];
-        drop.classList.remove("animate"); // Reset animation
-        void drop.offsetWidth; // Trigger reflow
-        drop.style.left = `${posX}px`;
-        drop.style.top = `${posY}px`;
-        drop.classList.add("animate");
-
-        poolIndex = (poolIndex + 1) % poolSize;
-      });
-
-      const links = document.querySelectorAll("a, button");
-      links.forEach((link) => {
-        link.addEventListener("mouseenter", () => {
-          cursorDot.style.transform = "translate(-50%, -50%) scale(2.5)";
-        });
-        link.addEventListener("mouseleave", () => {
-          cursorDot.style.transform = "translate(-50%, -50%) scale(1)";
-        });
-      });
-
-      // --- Theme Switcher ---
-      const themeToggleBtn = document.getElementById("theme-toggle");
-      const themeToggleDarkIcon = document.getElementById(
-        "theme-toggle-dark-icon"
-      );
-      const themeToggleLightIcon = document.getElementById(
-        "theme-toggle-light-icon"
-      );
-
-      if (
-        localStorage.getItem("color-theme") === "light" ||
-        (!("color-theme" in localStorage) &&
-          window.matchMedia("(prefers-color-scheme: light)").matches)
-      ) {
-        document.body.classList.add("light-theme");
-        themeToggleLightIcon.classList.remove("hidden");
-      } else {
-        themeToggleDarkIcon.classList.remove("hidden");
-      }
-
-      themeToggleBtn.addEventListener("click", function () {
-        themeToggleDarkIcon.classList.toggle("hidden");
-        themeToggleLightIcon.classList.toggle("hidden");
-        if (localStorage.getItem("color-theme")) {
-          if (localStorage.getItem("color-theme") === "light") {
-            document.body.classList.remove("light-theme");
-            localStorage.setItem("color-theme", "dark");
-          } else {
-            document.body.classList.add("light-theme");
-            localStorage.setItem("color-theme", "light");
-          }
-        } else {
-          if (document.body.classList.contains("light-theme")) {
-            document.body.classList.remove("light-theme");
-            localStorage.setItem("color-theme", "dark");
-          } else {
-            document.body.classList.add("light-theme");
-            localStorage.setItem("color-theme", "light");
-          }
-        }
-      });
-
-      // --- Mobile menu toggle ---
-      const mobileMenuButton = document.getElementById("mobile-menu-button");
-      const mobileMenu = document.getElementById("mobile-menu");
-      mobileMenuButton.addEventListener("click", () =>
-        mobileMenu.classList.toggle("hidden")
-      );
-
-      // --- Scroll Animations ---
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-              const children = entry.target.querySelectorAll(".custom-card");
-              children.forEach((child, index) => {
-                setTimeout(() => {
-                  child.classList.add("is-visible");
-                }, index * 100);
-              });
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-
-      document.querySelectorAll(".fade-in-section").forEach((section) => {
-        observer.observe(section);
-        const children = section.querySelectorAll(".custom-card");
-        children.forEach((child) => child.classList.add("fade-in-section"));
-      });
-
-      // --- EmailJS Integration & Typing Animation ---
+      // --- EmailJS Integration ---
       (function () {
         emailjs.init({ publicKey: "ujMqz1TIicdro2-4l" });
       })();
 
       window.onload = function () {
+        // --- Three.js Background ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#bg-canvas'),
+            alpha: false // Set to false to allow a background color
+        });
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.setZ(30);
+
+        const particleCount = 5000;
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 100;
+        }
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05
+        });
+        
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+        
+        const mouse = { x: 0, y: 0 };
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.x += 0.0001;
+            particles.rotation.y += 0.0002;
+
+            // Make particles react to mouse
+            const targetX = mouse.x * 0.1;
+            const targetY = mouse.y * 0.1;
+
+            particles.rotation.y += (targetX - particles.rotation.y) * 0.02;
+            particles.rotation.x += (targetY - particles.rotation.x) * 0.02;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // --- Custom Cursor ---
+        const cursorDot = document.querySelector(".cursor-dot");
+        const body = document.querySelector("body");
+        const dropPool = [];
+        const poolSize = 30;
+        let poolIndex = 0;
+
+        // Create a pool of drop elements
+        for (let i = 0; i < poolSize; i++) {
+            const drop = document.createElement("div");
+            drop.classList.add("drop");
+            body.appendChild(drop);
+            dropPool.push(drop);
+        }
+
+        window.addEventListener("mousemove", function (e) {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            const drop = dropPool[poolIndex];
+            drop.classList.remove("animate"); // Reset animation
+            void drop.offsetWidth; // Trigger reflow
+            drop.style.left = `${posX}px`;
+            drop.style.top = `${posY}px`;
+            drop.classList.add("animate");
+
+            poolIndex = (poolIndex + 1) % poolSize;
+        });
+
+        const links = document.querySelectorAll("a, button");
+        links.forEach((link) => {
+            link.addEventListener("mouseenter", () => {
+            cursorDot.style.transform = "translate(-50%, -50%) scale(5)";
+            });
+            link.addEventListener("mouseleave", () => {
+            cursorDot.style.transform = "translate(-50%, -50%) scale(1)";
+            });
+        });
+
+        // --- Theme Switcher ---
+        const themeToggleBtn = document.getElementById("theme-toggle");
+        const themeToggleDarkIcon = document.getElementById(
+            "theme-toggle-dark-icon"
+        );
+        const themeToggleLightIcon = document.getElementById(
+            "theme-toggle-light-icon"
+        );
+        
+        function updateThreeJSTheme() {
+            const isLightTheme = document.body.classList.contains('light-theme');
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
+            
+            // Use a soft gray for the light theme background, and the primary dark color for the dark theme.
+            const backgroundColor = isLightTheme ? '#f3f4f6' : '#121212'; 
+
+            particlesMaterial.color.set(accentColor);
+            renderer.setClearColor(new THREE.Color(backgroundColor));
+        }
+
+        if (localStorage.getItem("color-theme") === "light") {
+            document.body.classList.add("light-theme");
+            themeToggleLightIcon.classList.remove("hidden");
+        } else {
+            themeToggleDarkIcon.classList.remove("hidden");
+        }
+        updateThreeJSTheme();
+
+
+        themeToggleBtn.addEventListener("click", function () {
+            themeToggleDarkIcon.classList.toggle("hidden");
+            themeToggleLightIcon.classList.toggle("hidden");
+            if (localStorage.getItem("color-theme")) {
+            if (localStorage.getItem("color-theme") === "light") {
+                document.body.classList.remove("light-theme");
+                localStorage.setItem("color-theme", "dark");
+            } else {
+                document.body.classList.add("light-theme");
+                localStorage.setItem("color-theme", "light");
+            }
+            } else {
+            if (document.body.classList.contains("light-theme")) {
+                document.body.classList.remove("light-theme");
+                localStorage.setItem("color-theme", "dark");
+            } else {
+                document.body.classList.add("light-theme");
+                localStorage.setItem("color-theme", "light");
+            }
+            }
+            updateThreeJSTheme();
+        });
+
+        // --- Mobile menu toggle ---
+        const mobileMenuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
+        mobileMenuButton.addEventListener("click", () =>
+            mobileMenu.classList.toggle("hidden")
+        );
+
+        // --- Scroll Animations ---
+        const observer = new IntersectionObserver(
+            (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                const children = entry.target.querySelectorAll(".custom-card");
+                children.forEach((child, index) => {
+                    setTimeout(() => {
+                    child.classList.add("is-visible");
+                    }, index * 100);
+                });
+                }
+            });
+            },
+            { threshold: 0.1 }
+        );
+
+        document.querySelectorAll(".fade-in-section").forEach((section) => {
+            observer.observe(section);
+            const children = section.querySelectorAll(".custom-card");
+            children.forEach((child) => child.classList.add("fade-in-section"));
+        });
+        
+        // --- Contact Form, Modal, and Typing Animation ---
         const contactForm = document.getElementById("contact-form");
         const submitButton = document.getElementById("submit-button");
         const formStatus = document.getElementById("form-status");
@@ -933,44 +1011,44 @@
         const closeModalBtn = document.getElementById("close-modal-btn");
 
         resumeBtn.addEventListener("click", () => {
-          resumeModal.classList.remove("hidden");
-          resumeModal.classList.add("flex");
+            resumeModal.classList.remove("hidden");
+            resumeModal.classList.add("flex");
         });
 
         closeModalBtn.addEventListener("click", () => {
-          resumeModal.classList.add("hidden");
-          resumeModal.classList.remove("flex");
+            resumeModal.classList.add("hidden");
+            resumeModal.classList.remove("flex");
         });
 
         resumeModal.addEventListener("click", (e) => {
-          if (e.target === resumeModal) {
+            if (e.target === resumeModal) {
             resumeModal.classList.add("hidden");
             resumeModal.classList.remove("flex");
-          }
+            }
         });
 
         contactForm.addEventListener("submit", function (event) {
-          event.preventDefault();
-          submitButton.disabled = true;
-          submitButton.textContent = "Sending...";
-          formStatus.textContent = "";
+            event.preventDefault();
+            submitButton.disabled = true;
+            submitButton.textContent = "Sending...";
+            formStatus.textContent = "";
 
-          emailjs.sendForm("service_4gve1c3", "template_0ybfgb9", this).then(
-            () => {
-              submitButton.disabled = false;
-              submitButton.textContent = "Send Message";
-              formStatus.textContent = "Message sent successfully!";
-              formStatus.style.color = "var(--accent-primary)";
-              contactForm.reset();
-            },
-            (err) => {
-              submitButton.disabled = false;
-              submitButton.textContent = "Send Message";
-              formStatus.textContent = "Failed to send. Please try again.";
-              formStatus.style.color = "#ff6464";
-              console.error("EmailJS Error:", JSON.stringify(err));
-            }
-          );
+            emailjs.sendForm("service_4gve1c3", "template_0ybfgb9", this).then(
+                () => {
+                submitButton.disabled = false;
+                submitButton.textContent = "Send Message";
+                formStatus.textContent = "Message sent successfully!";
+                formStatus.style.color = "var(--accent-primary)";
+                contactForm.reset();
+                },
+                (err) => {
+                submitButton.disabled = false;
+                submitButton.textContent = "Send Message";
+                formStatus.textContent = "Failed to send. Please try again.";
+                formStatus.style.color = "#ff6464";
+                console.error("EmailJS Error:", JSON.stringify(err));
+                }
+            );
         });
 
         // Typing Animation Logic
@@ -981,27 +1059,28 @@
         let isDeleting = false;
 
         function type() {
-          const currentWord = words[wordIndex];
-          if (isDeleting) {
-            typingElement.textContent = currentWord.substring(0, charIndex - 1);
-            charIndex--;
-          } else {
-            typingElement.textContent = currentWord.substring(0, charIndex + 1);
-            charIndex++;
-          }
+            const currentWord = words[wordIndex];
+            if (isDeleting) {
+                typingElement.textContent = currentWord.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typingElement.textContent = currentWord.substring(0, charIndex + 1);
+                charIndex++;
+            }
 
-          if (!isDeleting && charIndex === currentWord.length) {
-            setTimeout(() => (isDeleting = true), 2000);
-          } else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            wordIndex = (wordIndex + 1) % words.length;
-          }
+            if (!isDeleting && charIndex === currentWord.length) {
+                setTimeout(() => (isDeleting = true), 2000);
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                wordIndex = (wordIndex + 1) % words.length;
+            }
 
-          const typingSpeed = isDeleting ? 100 : 200;
-          setTimeout(type, typingSpeed);
+            const typingSpeed = isDeleting ? 100 : 200;
+            setTimeout(type, typingSpeed);
         }
         type();
       };
     </script>
   </body>
 </html>
+
